@@ -1,0 +1,102 @@
+# ConfigMap
+# Это основной ресурс для хранения в Кубенетес конфигурационных данных. Его отличие от секрета в том, что в Секретах данные кодируются в base64. Также удобно иметь разные типы ресурсов для разных целей, ведь к ним можно будет предоставить разные доступа.
+# Как и все виды ресурсов  Кубернетеса, ConfigMap можно создать из yaml-файла:
+
+#apiVersion: v1
+#kind: ConfigMap
+#metadata:
+#  name: first-cm
+#  namespace: lesson16
+#data:
+#  config.yaml: |
+#    colorgood: purple
+#    colorbad: yellow
+
+#Также в ConfigMap можно передавать переменные, как и в Secret, только в незашифрованном виде:
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: env-cm
+  namespace: lesson15
+data:
+    colorgood: purple
+    colorbad: yellow
+
+
+#Использование ConfigMap в качестве переменной окружения
+#
+#spec:
+#  containers:
+#    - name: web
+#      image: ksxack/lesson1:v0.2
+#      ports:
+#        - containerPort: 8080
+#      env:
+#        - name: COLORGOOD
+#          valueFrom:
+#            configMapKeyRef:
+#              name: env-cm
+#              key: colorgood
+#        - name: COLORBAD
+#          valueFrom:
+#            configMapKeyRef:
+#              name: env-cm
+#              key: colorbad
+
+
+#Монтирование ConfigMap'а в файловую систему
+#
+#Порою КонфигМапы удобнее создавать из файла:
+#
+#kubectl create cm test-config -n lesson16 --from-file=root-ca.pem  # Вы можете писать cm вместо configmap
+#root-ca.pem
+#
+#
+#-----BEGIN CERTIFICATE-----
+#MIIEczCCA1ugAwIBAgIBADANBgkqhkiG9w0BAQQFAD..AkGA1UEBhMCR0Ix
+#EzARBgNVBAgTClNvbWUtU3RhdGUxFDASBgNVBAoTC0..0EgTHRkMTcwNQYD
+#VQQLEy5DbGFzcyAxIFB1YmxpYyBQcmltYXJ5IENlcn..XRpb24gQXV0aG9y
+#aXR5MRQwEgYDVQQDEwtCZXN0IENBIEx0ZDAeFw0wMD..TUwMTZaFw0wMTAy
+#MDQxOTUwMTZaMIGHMQswCQYDVQQGEwJHQjETMBEGA1..29tZS1TdGF0ZTEU
+#MBIGA1UEChMLQmVzdCBDQSBMdGQxNzA1BgNVBAsTLk..DEgUHVibGljIFBy
+#aW1hcnkgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkxFD..AMTC0Jlc3QgQ0Eg
+#THRkMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCg..Tz2mr7SZiAMfQyu
+#vBjM9OiJjRazXBZ1BjP5CE/Wm/Rr500PRK+Lh9x5eJ../ANBE0sTK0ZsDGM
+#ak2m1g7oruI3dY3VHqIxFTz0Ta1d+NAjwnLe4nOb7/..k05ShhBrJGBKKxb
+#8n104o/5p8HAsZPdzbFMIyNjJzBM2o5y5A13wiLitE..fyYkQzaxCw0Awzl
+#kVHiIyCuaF4wj571pSzkv6sv+4IDMbT/XpCo8L6wTa..sh+etLD6FtTjYbb
+#rvZ8RQM1tlKdoMHg2qxraAV++HNBYmNWs0duEdjUbJ..XI9TtnS4o1Ckj7P
+#OfljiQIDAQABo4HnMIHkMB0GA1UdDgQWBBQ8urMCRL..5AkIp9NJHJw5TCB
+#tAYDVR0jBIGsMIGpgBQ8urMCRLYYMHUKU5AkIp9NJH..aSBijCBhzELMAkG
+#A1UEBhMCR0IxEzARBgNVBAgTClNvbWUtU3RhdGUxFD..AoTC0Jlc3QgQ0Eg
+#THRkMTcwNQYDVQQLEy5DbGFzcyAxIFB1YmxpYyBQcm..ENlcnRpZmljYXRp
+#b24gQXV0aG9yaXR5MRQwEgYDVQQDEwtCZXN0IENBIE..DAMBgNVHRMEBTAD
+#AQH/MA0GCSqGSIb3DQEBBAUAA4IBAQC1uYBcsSncwA..DCsQer772C2ucpX
+#xQUE/C0pWWm6gDkwd5D0DSMDJRqV/weoZ4wC6B73f5..bLhGYHaXJeSD6Kr
+#XcoOwLdSaGmJYslLKZB3ZIDEp0wYTGhgteb6JFiTtn..sf2xdrYfPCiIB7g
+#BMAV7Gzdc4VspS6ljrAhbiiawdBiQlQmsBeFz9JkF4..b3l8BoGN+qMa56Y
+#It8una2gY4l2O//on88r5IWJlm1L0oA8e4fR2yrBHX..adsGeFKkyNrwGi/
+#7vQMfXdGsRrXNGRGnX+vWDZ3/zWI0joDtCkNnqEpVn..HoX
+#-----END CERTIFICATE-----
+#
+#Примонтируем КонфигМап к деплойменту:
+#
+#spec:
+#  containers:
+#    - name: web
+#      image: ksxack/lesson1:v0.2
+#      ports:
+#        - containerPort: 8080
+#      volumeMounts:
+#        - name: cm-volume
+#          mountPath: "/etc/ssl/certs/"
+#          readOnly: true
+#  volumes:
+#    - name: cm-volume
+#      configMap:
+#        name: test-config
+#
+#После по пути /etc/ssl/certs/ окажется файл root-ca.pem
+#
+#Используя эту возможность можно, например, прокинуть SSL - сертификат в контейнер, не прибегая к его пересборке, однако, чтобы новый КонфигМап примонтировался к файловой системе Пода, Вам придется перезагрузить Под.
