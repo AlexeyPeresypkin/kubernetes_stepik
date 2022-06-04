@@ -1,6 +1,6 @@
 FROM golang:1.10 AS builder
 WORKDIR /app
-COPY . .
+COPY .. .
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app
 
 FROM alpine:latest
